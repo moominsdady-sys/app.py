@@ -89,9 +89,9 @@ with col_3d:
     
     # 📌 ลิงก์ดึงข้อมูลโมเดลตรงของนายท่านจาก GitHub (ระบบสแกนอัตโนมัติจากไฟล์ในห้องเรโปเดียวกัน)
     repo_name = st.experimental_user.email if hasattr(st, "experimental_user") else ""
-    URL_BG = "bg.glb"
-    URL_DIG = "dig.glb"
-    URL_TRUCK = "truck.glb"
+    URL_BG = "https://github.com/moominsdady-sys/gold-mine-assets/blob/main/bg.glb"
+    URL_DIG = "https://github.com/moominsdady-sys/gold-mine-assets/blob/main/dig.glb"
+    URL_TRUCK = "https://github.com/moominsdady-sys/gold-mine-assets/blob/main/truck.glb"
     
     floating_pnl = sum(p.get('เสบียงเหลว (Profit)', 0.0) for p in open_positions)
     
