@@ -17,7 +17,7 @@ try:
     response = requests.get(FIREBASE_URL).json()
     my_mine = None
     for obj in response:
-        # ระบบจะค้นหาและดึงข้อมูลของพอร์ตนายท่านมาแสดงผลอัตโนมัติ
+        # ดึงข้อมูลพอร์ตของนายท่านจากระบบคลาวด์ตัวกลางอัตโนมัติ
         if obj.get('name') and str(obj.get('name')).startswith("gold_mine_"):
             my_mine = obj['data']
             break
@@ -35,7 +35,7 @@ try:
     elif 20 <= bkk_time or bkk_time < 4: mine_stats["session"] = "🇺🇸 New York Session (ตลาดหลักผันผวนสูงมาก!)"
     else: mine_stats["session"] = "🇯🇵 Tokyo/Sydney Session (ช่วงเวลาฟาร์มเหมืองเงียบๆ)"
 except:
-    # โหมดจำลองความปลอดภัยหากเครื่องคอมนอกยังไม่ได้กดส่งสัญญาณ
+    # โหมดจำลองความปลอดภัยรองรับระบบ
     acc_data = {"login": "กำลังรอซิงก์พอร์ต...", "balance": 0, "equity": 0, "margin_free": 0, "margin_level": 0}
     open_positions = []
     mine_stats = {"current_dd": 0, "max_dd_val": 4.52, "max_dd_date": "12/06/2026", "total_buy_lot": 0, "total_sell_lot": 0, "total_lot": 0, "spread": 0, "session": "-"}
@@ -56,7 +56,7 @@ st.markdown("---")
 
 col_dash, col_3d, col_ai = st.columns([3, 1.8, 2])
 
-# --- [คอลัมน์ที่ 1]: ตารางสรุปแบบ Row/Column ---
+# --- [คอลัมน์ที่ 1]: รายงานผลแบบแถวและคอลัมน์ (Dashboard) ---
 with col_dash:
     st.subheader("📊 รายงานสถานะการผลิตในเหมืองทอง")
     r1_c1, r1_c2, r1_c3 = st.columns(3)
@@ -83,52 +83,30 @@ with col_dash:
     else:
         st.info("🚜 ไม่มีคำสั่งขุดเจาะค้าง: เหมืองกำลังสแตนด์บาย")
 
-# --- [คอลัมน์ที่ 2]: ระบบ 3D ซ้อนรูปโครงร่างเหมืองจาก GitHub ---
+# --- [คอลัมน์ที่ 2]: เหมืองจำลอง (ปรับเปลี่ยนเป็นภาพแอนิเมชัน สลัดหลุดจากกล่องดำชัวร์ 100%) ---
 with col_3d:
-    st.subheader("📦 เหมืองจำลอง Live 3D")
-    
-    # 📌 ลิงก์ดึงข้อมูลโมเดลตรงของนายท่านจาก GitHub (ระบบสแกนอัตโนมัติจากไฟล์ในห้องเรโปเดียวกัน)
-    repo_name = st.experimental_user.email if hasattr(st, "experimental_user") else ""
-    URL_BG = "https://github.com/moominsdady-sys/gold-mine-assets/blob/main/bg.glb"
-    URL_DIG = "https://github.com/moominsdady-sys/gold-mine-assets/blob/main/dig.glb"
-    URL_TRUCK = "https://github.com/moominsdady-sys/gold-mine-assets/blob/main/truck.glb"
+    st.subheader("📦 เหมืองจำลอง Live 2D")
     
     floating_pnl = sum(p.get('เสบียงเหลว (Profit)', 0.0) for p in open_positions)
     
-    vehicle_url = URL_DIG
-    animation_mode = ""
-    if open_positions:
-        animation_mode = "autoplay"
-        if floating_pnl >= 0:
-            model_status = "⛏️ สถานะ: ขุดเจอสายแร่ทองคำ! (พอร์ตบวก)"
-            vehicle_url = URL_DIG
-        else:
-            model_status = "⚠️ สถานะ: ระบายเสบียงค้ำพอร์ต (พอร์ตลบ)"
-            vehicle_url = URL_TRUCK
+    # เลือกลิงก์รูปภาพแอนิเมชัน (GIF) ความละเอียดสูงสลับโหมดตามสถานะพอร์ตจริง
+    if not open_positions:
+        # สถานะพอร์ตว่าง -> แสดงภาพเหมืองและโรงงานกำลังซ่อมบำรุงเปิดไฟรอรับงาน
+        img_url = "https://giphy.com"
+        model_status = "🚜 สถานะ: เครื่องจักรกำลังสแตนด์บายพอร์ตว่างงาน"
+    elif floating_pnl >= 0:
+        # สถานะพอร์ตบวก -> แสดงภาพรถตักเหรียญทองคำ/สายแร่ทองกำลังทำงานขุดขึ้นมา
+        img_url = "https://giphy.com"
+        model_status = "⛏️ สถานะ: ขุดเจอสายแร่ทองคำ! (พอร์ตบวก)"
     else:
-        model_status = "🚜 สถานะ: เครื่องจักรสแตนด์บายพอร์ตว่างงาน"
+        # สถานะพอร์ตติดลบลาก -> แสดงภาพไซเรนเหมืองถล่ม/เตือนความร้อนระวังอันตรายพอร์ตแตก
+        img_url = "https://giphy.com"
+        model_status = "⚠️ Status: ตลาดผันผวนสูง เร่งค้ำจุนเหมือง (พอร์ตลบ)"
         
     st.caption(model_status)
     
-    html_3d_code = f"""
-    <script type="module" src="https://unpkg.com"></script>
-    <div style="position: relative; width: 100%; height: 350px; background-color: #0f1116; border-radius: 10px;">
-        <model-viewer id="mine-viewer" src="{URL_BG}" alt="Gold Mine Background" auto-rotate camera-controls interaction-prompt="none" shadow-intensity="1.5" bounds="tight" camera-orbit="auto auto auto" style="width: 100%; height: 100%;"></model-viewer>
-    </div>
-    <script>
-        const viewer = document.querySelector('#mine-viewer');
-        viewer.addEventListener('load', () => {{
-            const vScript = document.createElement('model-viewer');
-            vScript.setAttribute('src', '{vehicle_url}');
-            if('{animation_mode}') vScript.setAttribute('{animation_mode}', '');
-            vScript.setAttribute('scale', '0.15 0.15 0.15');
-            vScript.setAttribute('style', 'position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; background:transparent;');
-            viewer.parentElement.appendChild(vScript);
-            viewer.addEventListener('camera-change', () => {{ vScript.cameraOrbit = viewer.getCameraOrbit().toString(); }});
-        }});
-    </script>
-    """
-    st.components.v1.html(html_3d_code, height=360)
+    # ดึงภาพแอนิเมชันขึ้นโชว์กลางจอแบบพอดีสัดส่วนมือถือ ลาขาดปัญหากล่องดำเปล่าๆ
+    st.image(img_url, use_container_width=True)
     st.info(f"🕒 เขตพื้นที่ตลาด:\n\n{mine_stats['session']}")
 
 # --- [คอลัมน์ที่ 3]: เลขา AI พลอยคุมเหมืองทอง ---
@@ -163,7 +141,22 @@ with col_ai:
                 with st.spinner("เลขาพลอยกำลังส่งพอร์ตเข้าประมวลผลสมองส่วนกลาง..."):
                     try:
                         client = OpenAI(api_key=openai_key)
-                        system_prompt = f"You are an expert AI Trading Manager named 'พลอย' in a Gold Mine tycoon simulation game linked to real MT5 data. Call user 'ผู้บัญชาการ' or 'นายท่าน'. Speak in Thai language."
+                        system_prompt = f"""
+                        You are a playful, highly skilled AI Trading Assistant named 'พลอย' who manages a virtual Gold Mine tycoon simulation linked to actual MT5 Trading live data.
+                        Tone: Fun, polite, energetic corporate tycoon game assistant. Always address the user as 'ผู้บัญชาการ' or 'นายท่าน'. Use gamified mining/trading terms in Thai language.
+                        
+                        Real Live MT5 Database Context:
+                        - Current Fund Balance: ${acc_data['balance']}
+                        - Equity Valuation: ${acc_data['equity']}
+                        - Floating Loss/Profit: ${floating_pnl}
+                        - Account Current Drawdown: {mine_stats['current_dd']:.2f}%
+                        - Highest Historical Drawdown Risk: {mine_stats['max_dd_val']}% on {mine_stats['max_dd_date']}
+                        - Spread Level: {mine_stats['spread']} pips
+                        - Active Excavators (Open Positions): {open_positions}
+                        - Total Lot Size Capacity: {mine_stats['total_lot']} lots (Buy: {mine_stats['total_buy_lot']}, Sell: {mine_stats['total_sell_lot']})
+                        - Safety Index (Margin Level): {acc_data['margin_level']:.1f}%
+                        - World Market Zone: {mine_stats['session']}
+                        """
                         api_messages = [{"role": "system", "content": system_prompt}]
                         for m in st.session_state.messages: api_messages.append({"role": m["role"], "content": m["content"]})
                         res = client.chat.completions.create(model="gpt-4o", messages=api_messages, temperature=0.7)
