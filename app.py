@@ -11,17 +11,15 @@ st.set_page_config(page_title="👑 Gold Mine Commander - Cloud AI", layout="wid
 # ==============================================================================
 # 2. DATA BRIDGE PIPELINE (เปิดประตูเชื่อมดึงสัญญาณสด)
 # ==============================================================================
-FIREBASE_URL = "http://restful-api.dev"
+# แก้ไขบรรทัดที่ 11 ในไฟล์ app.py บน GitHub เพื่อดึงข้อมูลจากถังกลางสาธารณะ
+FIREBASE_URL = "https://jsonbin.io"
 
 try:
-    response = requests.get(FIREBASE_URL).json()
-    my_mine = None
-    for obj in response:
-        # ดึงข้อมูลพอร์ตของนายท่านจากระบบคลาวด์ตัวกลางอัตโนมัติ
-        if obj.get('name') and str(obj.get('name')).startswith("gold_mine_"):
-            my_mine = obj['data']
-            break
-            
+    # เป็นการดึงค่าข้อมูลพอร์ตล่าสุดที่ยิงมาจากคอมส่วนตัวของนายท่านอัตโนมัติ
+    headers = {"X-Bin-Private": "false"}
+    response = requests.get(f"{FIREBASE_URL}/latest", headers=headers).json()
+    my_mine = response.get("record")
+    
     if my_mine:
         acc_data = my_mine["account_info"]
         open_positions = my_mine["open_positions"] if my_mine["open_positions"] is not None else []
@@ -29,17 +27,17 @@ try:
         status_msg = f"⚡ ตรวจพบสัญญาณขุดอัปเดตเรียลไทม์ล่าสุดเมื่อ: {mine_stats['last_update']}"
     else:
         raise Exception("Waiting sync")
-    
+        
     bkk_time = datetime.now(pytz.timezone('Asia/Bangkok')).hour
     if 14 <= bkk_time < 20: mine_stats["session"] = "🇬🇧 London Session (เหมืองยุโรปกำลังขุดหนัก)"
     elif 20 <= bkk_time or bkk_time < 4: mine_stats["session"] = "🇺🇸 New York Session (ตลาดหลักผันผวนสูงมาก!)"
     else: mine_stats["session"] = "🇯🇵 Tokyo/Sydney Session (ช่วงเวลาฟาร์มเหมืองเงียบๆ)"
-except:
-    # โหมดจำลองความปลอดภัยรองรับระบบ
-    acc_data = {"login": "กำลังรอซิงก์พอร์ต...", "balance": 0, "equity": 0, "margin_free": 0, "margin_level": 0}
+except Exception as e:
+    acc_data = {"login": "กำลังเชื่อมข้อมูล...", "balance": 0, "equity": 0, "margin_free": 0, "margin_level": 0}
     open_positions = []
     mine_stats = {"current_dd": 0, "max_dd_val": 4.52, "max_dd_date": "12/06/2026", "total_buy_lot": 0, "total_sell_lot": 0, "total_lot": 0, "spread": 0, "session": "-"}
-    status_msg = "⏳ กำลังรอเปิดเครื่องส่งสัญญาณคลื่นวิทยุจากเครื่องคอมนอกหลังบ้าน..."
+    status_msg = "⏳ กำลังรอเปิดเครื่องส่งสัญญาณคลื่นวิทยุจากเครื่องหลังบ้าน..."
+
 
 # ==============================================================================
 # 3. INTERFACE DESIGN LAYOUT (การจัดแถวและคอลัมน์)
