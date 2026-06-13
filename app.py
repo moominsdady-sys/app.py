@@ -11,15 +11,19 @@ st.set_page_config(page_title="👑 Gold Mine Commander - Cloud AI", layout="wid
 # ==============================================================================
 # 2. DATA BRIDGE PIPELINE (เปิดประตูเชื่อมดึงสัญญาณสด)
 # ==============================================================================
-# แก้ไขบรรทัดที่ 11 ในไฟล์ app.py บน GitHub เพื่อดึงข้อมูลจากท่อส่งตัวจบ
-FIREBASE_URL = "https://beeceptor.com"
+# แก้ไขบรรทัดที่ 11 ในไฟล์ app.py บน GitHub เพื่อเปิดท่อดึงข้อมูลสด
+FIREBASE_URL = "https://ntfy.sh"
 
 try:
-    # ดึงค่าแกะกล่องข้อมูลจากเซิร์ฟเวอร์เปิดพอร์ตด่วนสาธารณะ
-    response = requests.get(FIREBASE_URL).json()
-    my_mine = response.get("parsedBody") # แกะข้อมูลออกจากกล่องโครงสร้าง Beeceptor
+    # ดึงค่าแกะกล่องข้อความดิบล่าสุดจากเซิร์ฟเวอร์ Ntfy ความเร็วสูง
+    response = requests.get(FIREBASE_URL, timeout=5).text
     
-    if my_mine:
+    # ดึงข้อมูลจากข้อความบรรทัดสุดท้ายที่ยิงขึ้นมา
+    lines = response.strip().split('\n')
+    last_event = json.loads(lines[-1])
+    my_mine = json.loads(last_event.get("message", "{}"))
+    
+    if my_mine and "account_info" in my_mine:
         acc_data = my_mine["account_info"]
         open_positions = my_mine["open_positions"] if my_mine["open_positions"] is not None else []
         mine_stats = my_mine["mine_stats"]
@@ -37,9 +41,6 @@ except Exception as e:
     mine_stats = {"current_dd": 0, "max_dd_val": 4.52, "max_dd_date": "12/06/2026", "total_buy_lot": 0, "total_sell_lot": 0, "total_lot": 0, "spread": 0, "session": "-"}
     status_msg = "⏳ กำลังรอเปิดเครื่องส่งสัญญาณคลื่นวิทยุจากเครื่องหลังบ้าน..."
 
-
-# ==============================================================================
-# 3. INTERFACE DESIGN LAYOUT (การจัดแถวและคอลัมน์)
 # ==============================================================================
 with st.sidebar:
     st.header("👑 ศูนย์ตั้งค่าความปลอดภัย")
