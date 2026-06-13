@@ -11,14 +11,13 @@ st.set_page_config(page_title="👑 Gold Mine Commander - Cloud AI", layout="wid
 # ==============================================================================
 # 2. DATA BRIDGE PIPELINE (เปิดประตูเชื่อมดึงสัญญาณสด)
 # ==============================================================================
-# แก้ไขบรรทัดที่ 11 ในไฟล์ app.py บน GitHub เพื่อดึงข้อมูลจากถังกลางสาธารณะ
-FIREBASE_URL = "https://jsonbin.io"
+# แก้ไขบรรทัดที่ 11 ในไฟล์ app.py บน GitHub เพื่อดึงข้อมูลจากท่อส่งตัวจบ
+FIREBASE_URL = "https://beeceptor.com"
 
 try:
-    # เป็นการดึงค่าข้อมูลพอร์ตล่าสุดที่ยิงมาจากคอมส่วนตัวของนายท่านอัตโนมัติ
-    headers = {"X-Bin-Private": "false"}
-    response = requests.get(f"{FIREBASE_URL}/latest", headers=headers).json()
-    my_mine = response.get("record")
+    # ดึงค่าแกะกล่องข้อมูลจากเซิร์ฟเวอร์เปิดพอร์ตด่วนสาธารณะ
+    response = requests.get(FIREBASE_URL).json()
+    my_mine = response.get("parsedBody") # แกะข้อมูลออกจากกล่องโครงสร้าง Beeceptor
     
     if my_mine:
         acc_data = my_mine["account_info"]
